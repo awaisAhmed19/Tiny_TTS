@@ -4,7 +4,7 @@ using namespace std;
 
 int main() {
   const std::string file_path =
-      "/home/awais/DEV/Tiny_TTS/src/dataset/sample_audios/sample-3s.wav";
+      "/home/awais/DEV/Tiny_TTS/src/dataset/sample_audios/sample-mono.wav";
   WavFile wav;
   wav = Wav::read_wav(file_path);
   Wav::debug(wav);

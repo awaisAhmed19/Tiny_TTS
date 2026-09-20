@@ -70,7 +70,7 @@ WavFile read_wav(const std::string &file_path) {
     }
 
     else if (id == "data") {
-      wav.data.resize(subchunk_size / sizeof(int16_t));
+      wav.data.resize(subchunk_size);
       file.read(reinterpret_cast<char *>(wav.data.data()), subchunk_size);
 
       if (!file) {
@@ -107,11 +107,13 @@ void write_wav(const WavFile &wav) {
   }
 
   char riff_id[4] = {'R', 'I', 'F', 'F'};
-  uint32_t chunk_size = 36 + (wav.data.size() * sizeof(int16_t));
+  const uint32_t data_size = static_cast<uint32_t>(wav.data.size());
+
+  const uint32_t chunk_size = 36 + data_size;
   char wave_id[4] = {'W', 'A', 'V', 'E'};
 
   file.write(riff_id, 4);
-  file.write(reinterpret_cast<char *>(&chunk_size), 4);
+  file.write(reinterpret_cast<const char *>(&chunk_size), 4);
   file.write(wave_id, 4);
 
   char chunk_id1[4] = {'f', 'm', 't', ' '};
@@ -134,8 +136,7 @@ void write_wav(const WavFile &wav) {
              sizeof wav.format.bits_per_sample);
 
   file.write(chunk_id2, 4);
-  uint32_t data_size = wav.data.size() * sizeof(int16_t);
-  file.write(reinterpret_cast<const char *>(&data_size), 4);
+  file.write(reinterpret_cast<const char *>(&data_size), sizeof data_size);
   file.write(reinterpret_cast<const char *>(wav.data.data()), data_size);
 }
 
@@ -151,7 +152,6 @@ void debug(const WavFile &wav) {
   std::cout << "  Bits/sample     : " << fmt.bits_per_sample << "\n";
   std::cout << "  Block align     : " << fmt.block_align << " bytes\n";
   std::cout << "  Byte rate       : " << fmt.byte_rate << " bytes/sec\n";
-
   std::cout << "\nData\n";
   std::cout << "  Data bytes      : " << wav.data.size() << "\n";
 
@@ -168,14 +168,14 @@ void debug(const WavFile &wav) {
   }
 
   std::cout << "\nRaw bytes preview\n";
-  constexpr std::size_t preview_count = 32;
 
+  constexpr std::size_t preview_count = 32;
   const std::size_t count = std::min(preview_count, wav.data.size());
 
   std::cout << "  ";
 
   for (std::size_t i = 0; i < count; ++i) {
-    std::cout << static_cast<int>(wav.data[i]);
+    std::cout << std::to_integer<unsigned int>(wav.data[i]);
 
     if (i + 1 < count) {
       std::cout << ", ";

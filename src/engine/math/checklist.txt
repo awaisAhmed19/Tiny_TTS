@@ -1,0 +1,297 @@
+/*
+/*
+============================================================
+VECTOR<T> — 1D NUMERICAL VECTOR
+============================================================
+
+// Construction / storage
+[ ] size()
+[ ] data()
+[ ] empty()
+[ ] resize()
+[ ] reserve()
+
+// Element access
+[ ] operator[]()
+[ ] at()
+[ ] front()
+[ ] back()
+
+// Arithmetic
+[ ] operator+()
+[ ] operator-()
+[ ] operator*()       // scalar
+[ ] operator/()       // scalar
+
+[ ] operator+=()
+[ ] operator-=()
+[ ] operator*=()
+[ ] operator/=()
+
+// Vector arithmetic
+[ ] dot()
+[ ] hadamardProduct()
+
+// Magnitude / normalization
+[ ] magnitudeSquared()
+[ ] magnitude()
+[ ] normalized()
+[ ] normalize()
+
+// Statistics / reductions
+[ ] sum()
+[ ] mean()
+[ ] variance()
+[ ] standardDeviation()
+[ ] minElement()
+[ ] maxElement()
+[ ] argmin()
+[ ] argmax()
+
+// Element-wise operations
+[ ] abs()
+[ ] floor()
+[ ] ceil()
+[ ] round()
+[ ] clamp()
+
+// Distance / comparison
+[ ] distanceSquared()
+[ ] distance()
+[ ] isZero()
+[ ] nearEqual()
+
+// Interpolation
+[ ] lerp()
+
+// Utility
+[ ] min()
+[ ] max()
+[ ] fill()
+[ ] zeros()
+[ ] ones()
+[ ] print()
+*/
+
+
+============================================================
+MATRIX
+============================================================
+
+// Construction
+[X] identity()
+[X] zero()
+[X] diagonal()
+
+// Properties
+[X] rows()
+[X] cols()
+[X] size()
+
+// Element access
+[X] at()
+[X] operator()
+
+// Arithmetic
+[X] operator+()
+[X] operator-()
+[X] operator*()
+[X] operator/()
+
+// Scalar operations
+[X] multiplyScalar()
+[X] divideScalar()
+
+// Matrix operations
+[X] transpose()
+[X] determinant()
+[X] inverse()
+
+// Matrix properties
+[X] isSquare()
+[X] isSymmetric()
+[X] isIdentity()
+[X] isZero()
+
+// Comparison
+[X] nearEqual()
+
+// Linear algebra
+[ ] trace()
+[ ] rank()
+[ ] cofactor()
+[ ] adjugate()
+
+// Decompositions
+[ ] LU()
+[ ] QR()
+[ ] SVD()
+[ ] eigenvalues()
+[ ] eigenvectors()
+
+// Vector operations
+[ ] multiplyVector()
+
+// Utility
+[ ] row()
+[ ] column()
+
+
+============================================================
+TENSOR
+============================================================
+
+// Construction
+[ ] zeros()
+[ ] ones()
+[ ] full()
+[ ] fromVector()
+  
+/  Properties
+[ ] shape()
+[ ] rank()
+[ ] size()
+[ ] data()
+[ ] empty()
+  
+/  Indexing
+[ ] at()
+[ ] operator[]()
+
+// Shape manipulation
+[ ] reshape()
+[ ] flatten()
+[ ] squeeze()
+[ ] unsqueeze()
+[ ] transpose()
+[ ] permute()
+
+// Element-wise operations
+[ ] add()
+[ ] subtract()
+[ ] multiply()
+[ ] divide()
+[ ] hadamardProduct()
+
+// Scalar operations
+[ ] addScalar()
+[ ] subtractScalar()
+[ ] multiplyScalar()
+[ ] divideScalar()
+
+// Reductions
+[ ] sum()
+[ ] mean()
+[ ] variance()
+[ ] standardDeviation()
+[ ] min()
+[ ] max()
+[ ] argmin()
+[ ] argmax()
+
+// Broadcasting
+[ ] broadcastTo()
+[ ] canBroadcast()
+
+// Linear algebra
+[ ] matmul()
+[ ] dot()
+[ ] outerProduct()
+
+// Numerical functions
+[ ] abs()
+[ ] exp()
+[ ] log()
+[ ] sqrt()
+[ ] pow()
+[ ] clamp()
+
+// Neural-network operations
+[ ] softmax()
+[ ] logSoftmax()
+
+// Memory
+[ ] clone()
+[ ] fill()
+[ ] contiguous()
+
+// Comparison
+[ ] isZero()
+[ ] nearEqual()
+
+// Debugging
+[ ] print()
+
+
+============================================================
+COMPLEX
+============================================================
+
+// Components
+[ ] real()
+[ ] imaginary()
+  
+/  Magnitude / phase
+[ ] magnitudeSquared()
+[ ] magnitude()
+[ ] phase()
+  
+/  Complex operations
+[ ] conjugate()
+  
+/  Arithmetic
+[ ] operator+()
+[ ] operator-()
+[ ] operator*()
+[ ] operator/()
+  
+/  Compound arithmetic
+[ ] operator+=()
+[ ] operator-=()
+[ ] operator*=()
+[ ] operator/=()
+  
+/  Comparison
+[ ] operator==()
+[ ] operator!=()
+[ ] nearEqual()
+[ ] isZero()
+
+// Polar representation
+[ ] fromPolar()
+[ ] toPolar()
+
+// Mathematical functions
+[ ] sqrt()
+[ ] exp()
+[ ] log()
+[ ] pow()
+
+// Trigonometric
+[ ] sin()
+[ ] cos()
+[ ] tan()
+
+
+============================================================
+CROSS-TYPE / FUTURE
+============================================================
+
+// Vector ↔ Matrix
+[ ] matrix * vector
+[ ] outerProduct(vector, vector)
+
+// Matrix ↔ Tensor
+[ ] matrix → tensor
+[ ] tensor → matrix
+
+// Complex ↔ Vector
+[ ] Vector<Complex>
+
+// Complex ↔ Tensor
+[ ] Tensor<Complex>
+
+// Tensor ↔ Matrix
+[ ] Tensor matrix multiplication
+[ ] batched matrix multiplication
+*/

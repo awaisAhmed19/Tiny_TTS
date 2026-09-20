@@ -14,7 +14,7 @@ struct WavFormat {
 
 struct WavFile {
   WavFormat format;
-  std::vector<int16_t> data;
+  std::vector<std::byte> data;
 };
 
 namespace Wav {
