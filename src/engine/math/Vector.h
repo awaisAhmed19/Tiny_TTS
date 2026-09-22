@@ -1,12 +1,14 @@
 #pragma once
 #include "Constants.h"
 #include "types.h"
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <cstring>
 #include <initializer_list>
 #include <memory>
 #include <new>
+#include <random>
 #include <utility>
 namespace engine {
 
@@ -49,71 +51,71 @@ CONSTRUCTION / OWNERSHIP
 FILL / INITIALIZATION
 ============================================================
 
-[ ] fill()
-[ ] zero()
-[ ] ones()
+[X] fill()
+[X] zero()
+[X] ones()
 
-[ ] randomUniform()
-[ ] randomNormal()
+[X] randomUniform()
+[X] randomNormal()
 
 ============================================================
 ELEMENT-WISE ARITHMETIC
 ============================================================
 
-[ ] add()
-[ ] subtract()
-[ ] multiply()
-[ ] divide()
+[X] add()
+[X] subtract()
+[X] multiply()
+[X] divide()
 
-[ ] operator+()
-[ ] operator-()
-[ ] operator*()       // scalar
-[ ] operator/()       // scalar
+[X] operator+()
+[X] operator-()
+[X] operator*()       // scalar
+[X] operator/()       // scalar
 
-[ ] operator+=()
-[ ] operator-=()
-[ ] operator*=()
-[ ] operator/=()
+[X] operator+=()
+[X] operator-=()
+[X] operator*=()
+[X] operator/=()
 
 ============================================================
 ELEMENT-WISE MATH
 ============================================================
 
-[ ] abs()
-[ ] exp()
-[ ] log()
-[ ] sqrt()
-[ ] pow()
+[X] abs()
+[X] exp()
+[X] log()
+[X] sqrt()
+[X] pow()
 
-[ ] sin()
-[ ] cos()
-[ ] tanh()
+[X] sin()
+[X] cos()
+[X] tanh()
 
-[ ] floor()
-[ ] ceil()
-[ ] round()
+[X] floor()
+[X] ceil()
+[X] round()
 
-[ ] clamp()
-[ ] min()
-[ ] max()
+[X] clamp()
+[X] min()
+[X] max()
 
 ============================================================
 REDUCTIONS
 ============================================================
 
-[ ] sum()
-[ ] mean()
+[X] sum()
+[X] mean()
 
-[ ] minElement()
-[ ] maxElement()
+[X] minElement()
+[X] maxElement()
 
-[ ] argmin()
-[ ] argmax()
+[X] argmin()
+[X] argmax()
 
-[ ] magnitudeSquared()
-[ ] magnitude()
+[X] magnitudeSquared()
+[X] magnitude()
 
-[ ] dot()
+[X] dot()
 
 ============================================================
 NORMALIZATION
@@ -303,7 +305,7 @@ template <typename T> struct Vector {
   // ============================================================
   //
   // [ ] size constructor
-  Vector(const size_t size) : m_capacity(size), m_size(size), mp_data(nullptr) {
+  Vector(size_t size) : m_capacity(0), m_size(0), mp_data(nullptr) {
     resize(size);
   }
   // [ ] value constructor
@@ -429,6 +431,7 @@ template <typename T> struct Vector {
     new (mp_data + m_size) T(value);
     ++m_size;
   }
+
   void push_back(T &&value) {
     if (m_size == m_capacity) {
       reserve(m_capacity == 0 ? 1 : m_capacity * 2);
@@ -437,18 +440,328 @@ template <typename T> struct Vector {
     new (mp_data + m_size) T(std::move(value));
     ++m_size;
   }
+
   template <typename... Args> T &emplace_back(Args &&...args) {
     if (m_size == m_capacity) {
       reserve(m_capacity == 0 ? 1 : m_capacity * 2);
     }
 
     T *element = mp_data + m_size;
-
     new (element) T(std::forward<Args>(args)...);
 
     ++m_size;
-
     return *element;
+  }
+
+  //[]Fill
+  void fill(const T value) {
+    for (size_t i = 0; i < m_size; ++i) {
+      mp_data[i] = value;
+    }
+  }
+
+  void zero() { fill(T{}); }
+
+  void ones() { fill(T{1}); }
+  void randomUniform(T a, T b) {
+    std::default_random_engine generator;
+    std::uniform_real_distribution<float> distribution(static_cast<float>(a),
+                                                       static_cast<float>(b));
+
+    for (size_t i = 0; i < m_size; ++i) {
+      mp_data[i] = distribution(generator);
+    }
+  }
+
+  void randomNormal(float mean, float std_dev) {
+    if (std_dev <= 0)
+      throw std::runtime_error("standard deviation must be positive");
+
+    std::random_device rd{};
+    std::mt19937 gen{rd()};
+
+    std::normal_distribution<float> d{mean, std_dev};
+
+    for (size_t n{}; n < m_size; ++n) {
+      mp_data[n] = d(gen);
+    }
+  }
+
+  Vector operator+(const Vector &other) {
+    if (m_size != other.m_size)
+      throw std::invalid_argument("vector sizes must match");
+    Vector output(m_size);
+    for (size_t i = 0; i < m_size; ++i) {
+      output.mp_data[i] = mp_data[i] + other.mp_data[i];
+    }
+    return output;
+  }
+
+  Vector operator*(const Vector &other) {
+    if (m_size != other.m_size)
+      throw std::invalid_argument("vector sizes must match");
+    Vector output(m_size);
+    for (size_t i = 0; i < m_size; ++i) {
+      output.mp_data[i] = mp_data[i] * other.mp_data[i];
+    }
+    return output;
+  }
+
+  Vector operator-(const Vector &other) {
+    if (m_size != other.m_size)
+      throw std::invalid_argument("vector sizes must match");
+    Vector output(m_size);
+    for (size_t i = 0; i < m_size; ++i) {
+      output.mp_data[i] = mp_data[i] - other.mp_data[i];
+    }
+    return output;
+  }
+
+  Vector operator/(const Vector &other) {
+    if (m_size != other.m_size)
+      throw std::invalid_argument("vector sizes must match");
+    Vector output(m_size);
+
+    for (size_t i = 0; i < m_size; ++i) {
+      if (other.mp_data[i] == 0)
+        throw std::runtime_error("division by zero");
+      output.mp_data[i] = mp_data[i] / other.mp_data[i];
+    }
+    return output;
+  }
+  Vector operator+(const T other) {
+    Vector output(m_size);
+    for (size_t i = 0; i < m_size; ++i) {
+      output.mp_data[i] = mp_data[i] + other;
+    }
+    return output;
+  }
+
+  Vector operator*(const T other) {
+    Vector output(m_size);
+    for (size_t i = 0; i < m_size; ++i) {
+      output.mp_data[i] = mp_data[i] * other;
+    }
+    return output;
+  }
+
+  Vector operator-(const T other) {
+    Vector output(m_size);
+    for (size_t i = 0; i < m_size; ++i) {
+      output.mp_data[i] = mp_data[i] - other;
+    }
+    return output;
+  }
+
+  Vector operator/(const T other) {
+    if (other == 0)
+      throw std::invalid_argument("vector sizes must match");
+    Vector output(m_size);
+    for (size_t i = 0; i < m_size; ++i) {
+      output.mp_data[i] = mp_data[i] / other;
+    }
+    return output;
+  }
+  Vector &operator+=(const Vector &other) {
+    if (m_size != other.m_size)
+      throw std::invalid_argument("vector sizes must match");
+    for (size_t i = 0; i < m_size; ++i) {
+      mp_data[i] += other.mp_data[i];
+    }
+    return *this;
+  }
+
+  Vector &operator*=(const Vector &other) {
+    if (m_size != other.m_size)
+      throw std::invalid_argument("vector sizes must match");
+    for (size_t i = 0; i < m_size; ++i) {
+      mp_data[i] *= other.mp_data[i];
+    }
+    return *this;
+  }
+
+  Vector &operator-=(const Vector &other) {
+    if (m_size != other.m_size)
+      throw std::invalid_argument("vector sizes must match");
+    for (size_t i = 0; i < m_size; ++i) {
+      mp_data[i] -= other.mp_data[i];
+    }
+    return *this;
+  }
+
+  Vector &operator/=(const Vector &other) {
+    if (m_size != other.m_size)
+      throw std::invalid_argument("vector sizes must match");
+
+    for (size_t i = 0; i < m_size; ++i) {
+      if (other.mp_data[i] == 0)
+        throw std::runtime_error("division by zero");
+      mp_data[i] /= other.mp_data[i];
+    }
+    return *this;
+  }
+  Vector &operator+=(const T other) {
+    Vector output(m_size);
+    for (size_t i = 0; i < m_size; ++i) {
+      mp_data[i] += other;
+    }
+    return *this;
+  }
+
+  Vector &operator*=(const T other) {
+    for (size_t i = 0; i < m_size; ++i) {
+      mp_data[i] *= other;
+    }
+    return *this;
+  }
+
+  Vector &operator-=(const T other) {
+    for (size_t i = 0; i < m_size; ++i) {
+      mp_data[i] -= other;
+    }
+    return *this;
+  }
+
+  Vector &operator/=(const T other) {
+    if (other == 0)
+      throw std::invalid_argument("vector sizes must match");
+    for (size_t i = 0; i < m_size; ++i) {
+      mp_data[i] /= other;
+    }
+    return *this;
+  }
+
+  void abs() {
+    for (size_t i = 0; i < m_size; ++i) {
+      mp_data[i] = std::abs(mp_data[i]);
+    }
+  }
+  void exp() {
+    for (size_t i = 0; i < m_size; ++i) {
+      mp_data[i] = std::exp(mp_data[i]);
+    }
+  }
+  void pow(const T value) {
+    for (size_t i = 0; i < m_size; ++i) {
+      mp_data[i] = std::pow(mp_data[i], value);
+    }
+  }
+  void log() {
+    for (size_t i = 0; i < m_size; ++i) {
+      mp_data[i] = std::log(mp_data[i]);
+    }
+  }
+  void sqrt() {
+    for (size_t i = 0; i < m_size; ++i) {
+      mp_data[i] = std::sqrt(mp_data[i]);
+    }
+  }
+
+  void sin() {
+    for (size_t i = 0; i < m_size; ++i) {
+      mp_data[i] = std::sin(mp_data[i]);
+    }
+  }
+  void cos() {
+    for (size_t i = 0; i < m_size; ++i) {
+      mp_data[i] = std::cos(mp_data[i]);
+    }
+  }
+  void tanh() {
+    for (size_t i = 0; i < m_size; ++i) {
+      mp_data[i] = std::tanh(mp_data[i]);
+    }
+  }
+  void floor() {
+    for (size_t i = 0; i < m_size; ++i) {
+      mp_data[i] = std::floor(mp_data[i]);
+    }
+  }
+  void ceil() {
+    for (size_t i = 0; i < m_size; ++i) {
+      mp_data[i] = std::ceil(mp_data[i]);
+    }
+  }
+  void round() {
+    for (size_t i = 0; i < m_size; ++i) {
+      mp_data[i] = std::round(mp_data[i]);
+    }
+  }
+  void clamp(const T min, const T max) {
+    for (size_t i = 0; i < m_size; ++i) {
+      mp_data[i] = std::clamp(mp_data[i], min, max);
+    }
+  }
+
+  T max() const {
+    if (m_size == 0)
+      throw std::runtime_error("max() called on empty vector");
+
+    T max_out = mp_data[0];
+
+    for (size_t i = 1; i < m_size; ++i)
+      max_out = std::max(max_out, mp_data[i]);
+
+    return max_out;
+  }
+
+  T min() const {
+    if (m_size == 0)
+      throw std::runtime_error("min() called on empty vector");
+
+    T min_out = mp_data[0];
+
+    for (size_t i = 1; i < m_size; ++i)
+      min_out = std::min(min_out, mp_data[i]);
+
+    return min_out;
+  }
+
+  T sum() {
+    if (m_size == 0)
+      throw std::runtime_error("min() called on empty vector");
+    T sum_ = 0;
+    for (size_t i = 0; i < m_size; ++i)
+      sum_ += mp_data[i];
+
+    return sum_;
+  }
+
+  T mean() {
+    if (m_size == 0)
+      throw std::runtime_error("min() called on empty vector");
+    T mean_ = 0, sum_ = 0;
+    for (size_t i = 0; i < m_size; ++i)
+      sum_ += mp_data[i];
+
+    return sum_ / m_size;
+  }
+
+  T minElement() { return min(); }
+  T maxElement() { return max(); }
+
+  T argmin() { return min(); }
+  T argmax() { return max(); }
+
+  T magnitudeSquared() const {
+    T result{};
+    for (size_t i = 0; i < m_size; ++i)
+      result += mp_data[i] * mp_data[i];
+
+    return result;
+  }
+
+  T magnitude() const { return std::sqrt(magnitudeSquared()); }
+
+  T dot(const Vector<T> &other) {
+    if (m_size != other.m_size) {
+      throw std::runtime_error("size of the vectors must be equal");
+    }
+    T dot_prod = 0;
+    for (int i = 0; i < m_size; ++i) {
+      dot_prod += mp_data[i] * other.mp_data[i];
+    }
+    return dot_prod;
   }
 };
 }; // namespace math

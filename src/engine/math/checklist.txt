@@ -1,15 +1,14 @@
 /*
-/*
 ============================================================
 VECTOR<T> — 1D NUMERICAL VECTOR
 ============================================================
 
 // Construction / storage
-[ ] size()
-[ ] data()
-[ ] empty()
-[ ] resize()
-[ ] reserve()
+[X] size()
+[X] data()
+[X] empty()
+[X] resize()
+[X] reserve()
 
 // Element access
 [ ] operator[]()
