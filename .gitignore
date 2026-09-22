@@ -1,4 +1,18 @@
+# Build artifacts
 build/
-design_docs/
+
+# Generated files
 output.txt
+output/
+
+# Vendored dependencies
 vendor/
+
+# IDE / tooling
+compile_commands.json
+
+# Archives
+*.zip
+
+# OS files
+.DS_Store
