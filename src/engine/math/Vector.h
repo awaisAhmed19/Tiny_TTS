@@ -121,36 +121,36 @@ REDUCTIONS
 NORMALIZATION
 ============================================================
 
-[ ] normalized()
+[X] normalized()
 
-[ ] variance()
-[ ] standardDeviation()
+[X] variance()
+[X] standardDeviation()
 
-[ ] normalize()
-[ ] standardize()
+[X] normalize()
+[X] standardize()
 
 ============================================================
 COMPARISON
 ============================================================
 
-[ ] isZero()
-[ ] isNormalized()
-[ ] nearEqual()
+[X] isZero()
+[X] isNormalized()
+[X] nearEqual()
 
-[ ] operator==()
-[ ] operator!=()
+[X] operator==()
+[X] operator!=()
 
 ============================================================
 ML-SPECIFIC
 ============================================================
 
-[ ] hadamardProduct()
-[ ] outerProduct()
+[X] hadamardProduct()
+[] outerProduct()
 
-[ ] softmax()
-[ ] logSoftmax()
+[X] softmax()
+[X] logSoftmax()
 
-[ ] oneHot()
+[X] oneHot()
 
 ============================================================
 UTILITY
@@ -159,11 +159,11 @@ UTILITY
 [ ] map()
 [ ] transform()
 
-[ ] copy()
-[ ] slice()
-[ ] concat()
+[X] copy()
+[X] slice()
+[X] concat()
 
-[ ] reverse()
+[X] reverse()
 
 ============================================================
 RANDOM / INITIALIZATION
@@ -274,6 +274,45 @@ template <typename T> struct Vector {
   T *data() const { return mp_data; }
   // [ ] operator[]()
   T &operator[](size_t i) { return mp_data[i]; }
+
+  bool operator==(Vector &other) const {
+    for (size_t i = 0; i < m_size; ++i) {
+      if (mp_data[i] != other[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+  // [ ] operator!=()
+  bool operator!=(Vector &other) const {
+    for (size_t i = 0; i < m_size; ++i) {
+      if (mp_data[i] != other[i]) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool is_zero() const {
+    for (size_t i = 0; i < m_size; ++i) {
+      if (mp_data[i] != 0 || mp_data[i] != 0.0f) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  bool nearEqual(const Vector &other, T epsilon) const {
+    if (m_size != other.m_size)
+      return false;
+
+    for (size_t i = 0; i < m_size; ++i) {
+      if (std::abs(mp_data[i] - other.mp_data[i]) > epsilon)
+        return false;
+    }
+
+    return true;
+  }
 
   const T &operator[](size_t i) const { return mp_data[i]; }
   // [ ] at()
@@ -758,10 +797,137 @@ template <typename T> struct Vector {
       throw std::runtime_error("size of the vectors must be equal");
     }
     T dot_prod = 0;
-    for (int i = 0; i < m_size; ++i) {
+    for (size_t i = 0; i < m_size; ++i) {
       dot_prod += mp_data[i] * other.mp_data[i];
     }
     return dot_prod;
+  }
+
+  Vector normalized() const {
+    T mag = magnitude();
+    if (mag == T{})
+      return *this;
+    Vector res(*this);
+    for (size_t i = 0; i < m_size; ++i) {
+      res.mp_data[i] /= mag;
+    }
+    return res;
+  }
+
+  T variance() {
+    T mu = mean();
+    T n = static_cast<T>(m_size);
+    T sum = 0, _sum = 0;
+
+    for (size_t i = 0; i < m_size; ++i) {
+      _sum = mp_data[i] - mu;
+      sum += _sum * _sum;
+    }
+
+    return sum / n;
+  }
+
+  T std_dev() { return std::sqrt(variance()); }
+
+  void normalize() {
+    T mag = magnitude();
+
+    if (mag == T{})
+      return;
+
+    for (size_t i = 0; i < m_size; ++i)
+      mp_data[i] /= mag;
+  }
+
+  void standardize() {
+    T mu = mean();
+    T sd = std_dev();
+
+    if (sd == T{})
+      return;
+
+    for (size_t i = 0; i < m_size; ++i)
+      mp_data[i] = (mp_data[i] - mu) / sd;
+  }
+
+  Vector hadamard_product(const Vector &other) const {
+    if (m_size != other.m_size)
+      throw std::runtime_error("size mismatch");
+
+    Vector res(*this);
+
+    for (size_t i = 0; i < m_size; ++i)
+      res[i] = mp_data[i] * other[i];
+
+    return res;
+  }
+
+  Vector softmax() const {
+    T max_value = max();
+    T denom = T{};
+
+    for (size_t i = 0; i < m_size; ++i)
+      denom += std::exp(mp_data[i] - max_value);
+
+    Vector res(*this);
+
+    for (size_t i = 0; i < m_size; ++i)
+      res[i] = std::exp(mp_data[i] - max_value) / denom;
+
+    return res;
+  }
+
+  Vector logsoftmax() const {
+    T max_value = max();
+    T sum = T{};
+
+    for (size_t i = 0; i < m_size; ++i)
+      sum += std::exp(mp_data[i] - max_value);
+
+    T log_sum_exp = std::log(sum);
+
+    Vector res(*this);
+
+    for (size_t i = 0; i < m_size; ++i)
+      res[i] = (mp_data[i] - max_value) - log_sum_exp;
+
+    return res;
+  }
+
+  static Vector one_hot(const size_t size, const size_t k) {
+    Vector res(size);
+
+    for (size_t i = 0; i < size; ++i) {
+      if (i == k) {
+        res[i] = 1;
+      } else {
+        res[i] = 0;
+      }
+    }
+    return res;
+  }
+
+  Vector concat(Vector &other) {
+    size_t new_size = m_size + other.m_size;
+    Vector res(new_size);
+    for (size_t i = 0; i < m_size; ++i) {
+      res[i] = mp_data[i];
+    }
+    for (size_t i = m_size; i < new_size; ++i) {
+      res[i] = other.mp_data[i];
+    }
+    return res;
+  }
+  Vector reverse() {
+    Vector res(*this);
+    for (size_t i = 0; i < m_size; ++i) {
+      res[i] = mp_data[m_size - i - 1];
+    }
+    return res;
+  }
+  Vector copy() {
+    Vector res(*this);
+    return res;
   }
 };
 }; // namespace math
