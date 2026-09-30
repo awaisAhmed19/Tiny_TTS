@@ -158,7 +158,7 @@ include(CTest)
 
 add_executable(
     test_correctness
-    tests/test_test.cpp
+    tests/vector_matrix_test.cpp
 )
 
 add_test(

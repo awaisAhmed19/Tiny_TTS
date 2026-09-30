@@ -196,22 +196,35 @@ template <typename T> struct Vector {
   // [ ] resize()
   void resize(size_t new_size) {
     if (new_size < m_size) {
-      // Destroy elements being removed
       for (size_t i = new_size; i < m_size; ++i) {
         (mp_data + i)->~T();
       }
+
       m_size = new_size;
       return;
     }
+
     if (new_size > m_capacity) {
       reserve(new_size);
     }
-    for (size_t i = m_size; i < new_size; ++i) {
-      new (mp_data + i) T();
+
+    size_t constructed = m_size;
+
+    try {
+      for (; constructed < new_size; ++constructed) {
+        new (mp_data + constructed) T();
+      }
+    } catch (...) {
+      for (size_t i = m_size; i < constructed; ++i) {
+        (mp_data + i)->~T();
+      }
+
+      throw;
     }
 
     m_size = new_size;
   }
+
   void resize(size_t new_size, const T &value) {
     if (new_size < m_size) {
       for (size_t i = new_size; i < m_size; ++i) {
@@ -225,9 +238,21 @@ template <typename T> struct Vector {
     if (new_size > m_capacity) {
       reserve(new_size);
     }
-    for (size_t i = m_size; i < new_size; ++i) {
-      new (mp_data + i) T(value);
+
+    size_t constructed = m_size;
+
+    try {
+      for (; constructed < new_size; ++constructed) {
+        new (mp_data + constructed) T(value);
+      }
+    } catch (...) {
+      for (size_t i = m_size; i < constructed; ++i) {
+        (mp_data + i)->~T();
+      }
+
+      throw;
     }
+
     m_size = new_size;
   }
   // [ ] reserve()
@@ -271,38 +296,37 @@ template <typename T> struct Vector {
   bool empty() const { return m_size == 0; }
   //
   // [ ] data()
-  T *data() const { return mp_data; }
+  T *data() { return mp_data; }
+
+  const T *data() const { return mp_data; }
   // [ ] operator[]()
   T &operator[](size_t i) { return mp_data[i]; }
 
-  bool operator==(Vector &other) const {
-    for (size_t i = 0; i < m_size; ++i) {
-      if (mp_data[i] != other[i]) {
-        return false;
-      }
-    }
-    return true;
-  }
-  // [ ] operator!=()
-  bool operator!=(Vector &other) const {
-    for (size_t i = 0; i < m_size; ++i) {
-      if (mp_data[i] != other[i]) {
-        return true;
-      }
-    }
-    return false;
-  }
+  bool operator==(const Vector &other) const {
+    if (m_size != other.m_size)
+      return false;
 
-  bool is_zero() const {
     for (size_t i = 0; i < m_size; ++i) {
-      if (mp_data[i] != 0 || mp_data[i] != 0.0f) {
+      if (mp_data[i] != other.mp_data[i])
         return false;
-      }
     }
+
     return true;
   }
 
-  bool nearEqual(const Vector &other, T epsilon) const {
+  bool operator!=(const Vector &other) const { return !(*this == other); }
+
+  bool isZero(T epsilon = std::numeric_limits<T>::epsilon()) const {
+    for (size_t i = 0; i < m_size; ++i) {
+      if (std::abs(mp_data[i]) > epsilon)
+        return false;
+    }
+
+    return true;
+  }
+
+  bool nearEqual(const Vector &other,
+                 T epsilon = std::numeric_limits<T>::epsilon()) const {
     if (m_size != other.m_size)
       return false;
 
@@ -349,7 +373,7 @@ template <typename T> struct Vector {
   }
   // [ ] value constructor
   Vector(const size_t size, const T &value)
-      : m_capacity(size), m_size(size), mp_data(nullptr) {
+      : m_capacity(0), m_size(0), mp_data(nullptr) {
     resize(size, value);
   }
   // [ ] initializer-list constructor
@@ -504,29 +528,27 @@ template <typename T> struct Vector {
   void ones() { fill(T{1}); }
   void randomUniform(T a, T b) {
     std::default_random_engine generator;
-    std::uniform_real_distribution<float> distribution(static_cast<float>(a),
-                                                       static_cast<float>(b));
+    std::uniform_real_distribution<T> distribution(static_cast<T>(a),
+                                                   static_cast<T>(b));
 
     for (size_t i = 0; i < m_size; ++i) {
       mp_data[i] = distribution(generator);
     }
   }
 
-  void randomNormal(float mean, float std_dev) {
-    if (std_dev <= 0)
-      throw std::runtime_error("standard deviation must be positive");
+  void randomNormal(T mean, T std_dev) {
+    if (std_dev <= T{})
+      throw std::invalid_argument("standard deviation must be positive");
 
     std::random_device rd{};
     std::mt19937 gen{rd()};
+    std::normal_distribution<T> distribution{mean, std_dev};
 
-    std::normal_distribution<float> d{mean, std_dev};
-
-    for (size_t n{}; n < m_size; ++n) {
-      mp_data[n] = d(gen);
-    }
+    for (size_t i = 0; i < m_size; ++i)
+      mp_data[i] = distribution(gen);
   }
 
-  Vector operator+(const Vector &other) {
+  Vector operator+(const Vector &other) const {
     if (m_size != other.m_size)
       throw std::invalid_argument("vector sizes must match");
     Vector output(m_size);
@@ -536,7 +558,7 @@ template <typename T> struct Vector {
     return output;
   }
 
-  Vector operator*(const Vector &other) {
+  Vector operator*(const Vector &other) const {
     if (m_size != other.m_size)
       throw std::invalid_argument("vector sizes must match");
     Vector output(m_size);
@@ -546,7 +568,7 @@ template <typename T> struct Vector {
     return output;
   }
 
-  Vector operator-(const Vector &other) {
+  Vector operator-(const Vector &other) const {
     if (m_size != other.m_size)
       throw std::invalid_argument("vector sizes must match");
     Vector output(m_size);
@@ -556,7 +578,7 @@ template <typename T> struct Vector {
     return output;
   }
 
-  Vector operator/(const Vector &other) {
+  Vector operator/(const Vector &other) const {
     if (m_size != other.m_size)
       throw std::invalid_argument("vector sizes must match");
     Vector output(m_size);
@@ -568,7 +590,7 @@ template <typename T> struct Vector {
     }
     return output;
   }
-  Vector operator+(const T other) {
+  Vector operator+(const T other) const {
     Vector output(m_size);
     for (size_t i = 0; i < m_size; ++i) {
       output.mp_data[i] = mp_data[i] + other;
@@ -576,7 +598,7 @@ template <typename T> struct Vector {
     return output;
   }
 
-  Vector operator*(const T other) {
+  Vector operator*(const T other) const {
     Vector output(m_size);
     for (size_t i = 0; i < m_size; ++i) {
       output.mp_data[i] = mp_data[i] * other;
@@ -584,7 +606,7 @@ template <typename T> struct Vector {
     return output;
   }
 
-  Vector operator-(const T other) {
+  Vector operator-(const T other) const {
     Vector output(m_size);
     for (size_t i = 0; i < m_size; ++i) {
       output.mp_data[i] = mp_data[i] - other;
@@ -592,7 +614,7 @@ template <typename T> struct Vector {
     return output;
   }
 
-  Vector operator/(const T other) {
+  Vector operator/(const T other) const {
     if (other == 0)
       throw std::invalid_argument("vector sizes must match");
     Vector output(m_size);
@@ -640,7 +662,7 @@ template <typename T> struct Vector {
     return *this;
   }
   Vector &operator+=(const T other) {
-    Vector output(m_size);
+
     for (size_t i = 0; i < m_size; ++i) {
       mp_data[i] += other;
     }
@@ -663,7 +685,7 @@ template <typename T> struct Vector {
 
   Vector &operator/=(const T other) {
     if (other == 0)
-      throw std::invalid_argument("vector sizes must match");
+      throw std::invalid_argument("division by zero");
     for (size_t i = 0; i < m_size; ++i) {
       mp_data[i] /= other;
     }
@@ -756,9 +778,9 @@ template <typename T> struct Vector {
     return min_out;
   }
 
-  T sum() {
+  T sum() const {
     if (m_size == 0)
-      throw std::runtime_error("min() called on empty vector");
+      throw std::runtime_error("sum() called on empty vector");
     T sum_ = 0;
     for (size_t i = 0; i < m_size; ++i)
       sum_ += mp_data[i];
@@ -766,9 +788,9 @@ template <typename T> struct Vector {
     return sum_;
   }
 
-  T mean() {
+  T mean() const {
     if (m_size == 0)
-      throw std::runtime_error("min() called on empty vector");
+      throw std::runtime_error("mean() called on empty vector");
     T mean_ = 0, sum_ = 0;
     for (size_t i = 0; i < m_size; ++i)
       sum_ += mp_data[i];
@@ -776,11 +798,36 @@ template <typename T> struct Vector {
     return sum_ / m_size;
   }
 
-  T minElement() { return min(); }
-  T maxElement() { return max(); }
+  T minElement() const { return min(); }
+  T maxElement() const { return max(); }
 
-  T argmin() { return min(); }
-  T argmax() { return max(); }
+  size_t argmin() const {
+    if (m_size == 0)
+      throw std::runtime_error("argmin() called on empty vector");
+
+    size_t index = 0;
+
+    for (size_t i = 1; i < m_size; ++i) {
+      if (mp_data[i] < mp_data[index])
+        index = i;
+    }
+
+    return index;
+  }
+
+  size_t argmax() const {
+    if (m_size == 0)
+      throw std::runtime_error("argmax() called on empty vector");
+
+    size_t index = 0;
+
+    for (size_t i = 1; i < m_size; ++i) {
+      if (mp_data[i] > mp_data[index])
+        index = i;
+    }
+
+    return index;
+  }
 
   T magnitudeSquared() const {
     T result{};
@@ -792,7 +839,7 @@ template <typename T> struct Vector {
 
   T magnitude() const { return std::sqrt(magnitudeSquared()); }
 
-  T dot(const Vector<T> &other) {
+  T dot(const Vector<T> &other) const {
     if (m_size != other.m_size) {
       throw std::runtime_error("size of the vectors must be equal");
     }
@@ -803,9 +850,9 @@ template <typename T> struct Vector {
     return dot_prod;
   }
 
-  Vector normalized() const {
+  Vector normalized(T epsilon = std::numeric_limits<T>::epsilon()) const {
     T mag = magnitude();
-    if (mag == T{})
+    if (mag <= epsilon)
       return *this;
     Vector res(*this);
     for (size_t i = 0; i < m_size; ++i) {
@@ -814,9 +861,9 @@ template <typename T> struct Vector {
     return res;
   }
 
-  T variance() {
+  T variance() const {
     T mu = mean();
-    T n = static_cast<T>(m_size);
+    const size_t n = m_size;
     T sum = 0, _sum = 0;
 
     for (size_t i = 0; i < m_size; ++i) {
@@ -824,15 +871,15 @@ template <typename T> struct Vector {
       sum += _sum * _sum;
     }
 
-    return sum / n;
+    return sum / static_cast<T>(n);
   }
 
-  T std_dev() { return std::sqrt(variance()); }
+  T std_dev() const { return std::sqrt(variance()); }
 
-  void normalize() {
+  void normalize(T epsilon = std::numeric_limits<T>::epsilon()) {
     T mag = magnitude();
 
-    if (mag == T{})
+    if (mag <= epsilon)
       return;
 
     for (size_t i = 0; i < m_size; ++i)
@@ -907,28 +954,25 @@ template <typename T> struct Vector {
     return res;
   }
 
-  Vector concat(Vector &other) {
-    size_t new_size = m_size + other.m_size;
-    Vector res(new_size);
-    for (size_t i = 0; i < m_size; ++i) {
+  Vector concat(const Vector &other) const {
+    Vector res(m_size + other.m_size);
+
+    for (size_t i = 0; i < m_size; ++i)
       res[i] = mp_data[i];
-    }
-    for (size_t i = m_size; i < new_size; ++i) {
-      res[i] = other.mp_data[i];
-    }
+
+    for (size_t i = 0; i < other.m_size; ++i)
+      res[m_size + i] = other[i];
+
     return res;
   }
-  Vector reverse() {
+  Vector reverse() const {
     Vector res(*this);
     for (size_t i = 0; i < m_size; ++i) {
       res[i] = mp_data[m_size - i - 1];
     }
     return res;
   }
-  Vector copy() {
-    Vector res(*this);
-    return res;
-  }
+  Vector copy() { return *this; }
 };
 }; // namespace math
 }; // namespace engine

@@ -80,22 +80,22 @@ MATRIX
 // Construction
 [X] identity()
 [X] zero()
-[X] diagonal()
+[ ] diagonal()
 
 // Properties
 [X] rows()
 [X] cols()
-[X] size()
+[ ] size()
 
 // Element access
-[X] at()
-[X] operator()
+[ ] at()
+[ ] operator()
 
 // Arithmetic
 [X] operator+()
 [X] operator-()
 [X] operator*()
-[X] operator/()
+[X] operator/
 
 // Scalar operations
 [X] multiplyScalar()
@@ -104,19 +104,19 @@ MATRIX
 // Matrix operations
 [X] transpose()
 [X] determinant()
-[X] inverse()
+[ ] inverse()
 
 // Matrix properties
-[X] isSquare()
-[X] isSymmetric()
-[X] isIdentity()
-[X] isZero()
+[ ] isSquare()
+[ ] isSymmetric()
+[ ] isIdentity()
+[ ] isZero()
 
 // Comparison
-[X] nearEqual()
+[ ] nearEqual()
 
 // Linear algebra
-[ ] trace()
+[X] trace()
 [ ] rank()
 [ ] cofactor()
 [ ] adjugate()
@@ -129,12 +129,11 @@ MATRIX
 [ ] eigenvectors()
 
 // Vector operations
-[ ] multiplyVector()
+[X] multiplyVector()
 
 // Utility
 [ ] row()
 [ ] column()
-
 
 ============================================================
 TENSOR
