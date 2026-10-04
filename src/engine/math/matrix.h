@@ -1,6 +1,6 @@
 #pragma once
-#include "Vector.h"
-#include "types.h"
+#include "../core/types.h"
+#include "vector.h"
 #include <algorithm>
 #include <array>
 #include <cmath>

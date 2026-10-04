@@ -1,5 +1,6 @@
 #pragma once
-
+#include "../core/device.h"
+#include "shape.h"
 // ============================================================
 // TENSOR
 // ============================================================
@@ -86,7 +87,36 @@
 // [ ] print()
 namespace engine {
 namespace math {
+using namespace tinytts;
+template <typename T> struct Tensor {
+public:
+  using value_type = T;
 
-template <typename T> struct Tensor {};
+  Tensor() = default;
+
+  Tensor(Shape shape, Device device = Device::CPU);
+
+  ~Tensor();
+
+  Tensor(const Tensor &) = delete;
+  Tensor &operator=(const Tensor &) = delete;
+
+  Tensor(Tensor &&) noexcept;
+  Tensor &operator=(Tensor &&) noexcept;
+
+  T *data() noexcept;
+  const T *data() const noexcept;
+
+  const Shape &shape() const noexcept;
+
+  size_t size() const noexcept;
+
+  Device device() const noexcept;
+
+private:
+  T *m_data = nullptr;
+  Shape m_shape;
+  Device m_device = Device::CPU;
+};
 }; // namespace math
 }; // namespace engine

@@ -1,6 +1,6 @@
 #pragma once
-#include "Constants.h"
-#include "types.h"
+#include "../core/constants.h"
+#include "../core/types.h"
 #include <cmath>
 namespace engine {
 

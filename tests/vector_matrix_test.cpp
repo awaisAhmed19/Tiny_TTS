@@ -1,5 +1,5 @@
-#include "../src/engine/math/Matrix.h"
-#include "../src/engine/math/Vector.h"
+#include "../src/engine/math/matrix.h"
+#include "../src/engine/math/vector.h"
 
 #include <cmath>
 #include <cstdlib>

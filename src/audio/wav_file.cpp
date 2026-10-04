@@ -100,7 +100,7 @@ WavFile read_wav(const std::string &file_path) {
 }
 
 void write_wav(const WavFile &wav) {
-  std::string file_path = "/home/awais/DEV/Tiny_TTS/output/samples.wav";
+  std::string file_path = "/home/awais/Dev/Tiny_TTS/output/samples.wav";
   std::ofstream file(file_path, std::ios::binary);
   if (!file) {
     throw std::runtime_error("couldnt open the file");
