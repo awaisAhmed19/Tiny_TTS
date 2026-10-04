@@ -63,7 +63,7 @@
 // [ ] eigenvectors()
 //
 // /  Vector operations
-// [ ] multiplyVector()
+// [X] multiplyVector()
 //
 // /  Utility
 // [ ] row()
