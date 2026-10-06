@@ -1,6 +1,11 @@
 #pragma once
 #include "../core/device.h"
 #include "shape.h"
+#include <stdint.h>
+#include <string>
+#include <type_traits>
+#include <typeinfo>
+#include <vector>
 // ============================================================
 // TENSOR
 // ============================================================
@@ -88,35 +93,21 @@
 namespace engine {
 namespace math {
 using namespace tinytts;
-template <typename T> struct Tensor {
-public:
-  using value_type = T;
 
-  Tensor() = default;
+template <typename T> struct tensor {
+  T *m_data;
+  using dtype = T;
 
-  Tensor(Shape shape, Device device = Device::CPU);
+  std::vector<int16_t> m_shape;
+  std::vector<int16_t> m_stride;
 
-  ~Tensor();
+  Device device;
 
-  Tensor(const Tensor &) = delete;
-  Tensor &operator=(const Tensor &) = delete;
-
-  Tensor(Tensor &&) noexcept;
-  Tensor &operator=(Tensor &&) noexcept;
-
-  T *data() noexcept;
-  const T *data() const noexcept;
-
-  const Shape &shape() const noexcept;
-
-  size_t size() const noexcept;
-
-  Device device() const noexcept;
-
-private:
-  T *m_data = nullptr;
-  Shape m_shape;
-  Device m_device = Device::CPU;
+  static constexpr bool check_valid_type() {
+    return std::is_floating_point_v<T> ||
+           std::is_same_v<T, int>; //||
+                                   // TODO:  std::is_same_v<T, complex>;
+  }
 };
 }; // namespace math
 }; // namespace engine

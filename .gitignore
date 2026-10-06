@@ -10,7 +10,7 @@ vendor/
 
 # IDE / tooling
 compile_commands.json
-
+Backlog.md
 # Archives
 *.zip
 
