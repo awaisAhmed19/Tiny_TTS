@@ -1,11 +1,5 @@
 #pragma once
-#include "../core/device.h"
-#include "shape.h"
 #include <stdint.h>
-#include <string>
-#include <type_traits>
-#include <typeinfo>
-#include <vector>
 // ============================================================
 // TENSOR
 // ============================================================
@@ -90,24 +84,18 @@
 //
 // Debugging
 // [ ] print()
-namespace engine {
+#include "../src/core/buffer.h"
+inline constexpr size_t MAX_DIM = 8;
 namespace math {
-using namespace tinytts;
 
-template <typename T> struct tensor {
-  T *m_data;
-  using dtype = T;
-
-  std::vector<int16_t> m_shape;
-  std::vector<int16_t> m_stride;
-
-  Device device;
-
-  static constexpr bool check_valid_type() {
-    return std::is_floating_point_v<T> ||
-           std::is_same_v<T, int>; //||
-                                   // TODO:  std::is_same_v<T, complex>;
-  }
+struct Tensor {
+  Buffer *buffer;
+  Datatype dtype;
+  size_t ndim;
+  size_t shape[MAX_DIM];
+  size_t stride[MAX_DIM];
+  size_t numel;
+  size_t offset;
 };
+
 }; // namespace math
-}; // namespace engine
